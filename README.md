@@ -1,4 +1,4 @@
-# QuantiPhy 2026: open-weight entry (Track B)
+# quantiphy-geo-vlm: QuantiPhy 2026 open-weight entry (Track B)
 
 ## QuantiPhy
 
@@ -104,8 +104,13 @@ were not stored with the results. The two combine steps (`hybrid_v2.hybrid` and
 
 ## Reproduce
 
-Install [uv](https://docs.astral.sh/uv/) (tested with uv 0.11.18) and git, then run
-everything from the repository root. All paths are relative to the repository root.
+Install [uv](https://docs.astral.sh/uv/) (tested with uv 0.11.18) and git, then clone this
+repository and run everything from its root. All paths are relative to the repository root.
+
+```bash
+git clone https://github.com/kuotunyu/quantiphy-geo-vlm
+cd quantiphy-geo-vlm
+```
 
 The GPU steps need an NVIDIA GPU with 24 GB and a driver that supports CUDA 12.8, on Windows
 or Linux. macOS is not supported: `uv.lock` has the CUDA builds of torch for Windows and
