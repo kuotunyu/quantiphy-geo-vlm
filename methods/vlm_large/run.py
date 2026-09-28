@@ -156,6 +156,7 @@ def main() -> int:
     summ = base.summarize(items) | {"version": VERSION, "model": MODEL_ID, "revision": MODEL_REVISION,
                                     "quantization": QUANT, "questions": "all" if args.split == "val" else "hybrid_v2 VLM-answered only"}
     out = ROOT / "results" / f"{VERSION}_{args.split}_summary.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(summ, indent=2), encoding="utf-8")
     print(json.dumps(summ, indent=1))
     print(f"wrote {out}")

@@ -205,6 +205,7 @@ def main() -> int:
         tmpl.to_csv(sub, index=False)
         summ["submission"] = sub.relative_to(ROOT).as_posix()
         out = ROOT / "results" / f"{VERSION}_test_summary.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(summ, indent=2, default=_json_default), encoding="utf-8")
     print(json.dumps({k: summ[k] for k in ("n", "fallback_rate", "fallback_rate_by_category", "method_counts", "failure_reasons")}, indent=1, default=_json_default))
     print(f"wrote {out}")

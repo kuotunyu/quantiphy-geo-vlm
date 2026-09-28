@@ -2,8 +2,9 @@
 
 ## QuantiPhy starter kit
 
-`methods/vlm_baseline/run.py` reuses the wording of the zero-shot system prompt and of
-`build_context_prefix()` from the official QuantiPhy starter kit
+`methods/vlm_baseline/run.py` (whose prompt `methods/vlm_large/run.py` also uses) reuses the
+wording of the zero-shot system prompt, of `build_context_prefix()` and of the closing answer
+instruction from the official QuantiPhy starter kit
 (<https://github.com/Paulineli/QuantiPhy>, file `model_run_example/run_API_results.py`,
 commit `4f9323c9ca9479fc673749ae7d2a82729fef6e85`). The starter kit itself (including
 `evaluator.py`) is not included in this repository; `scripts/setup.ps1` fetches it into

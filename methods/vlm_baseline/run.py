@@ -305,6 +305,7 @@ def write_probe(df: pd.DataFrame, items_dir: Path, split: str) -> None:
         "estimated_remaining_minutes": round(est_min - done_min, 1),
     }
     path = ROOT / "results" / f"{VERSION}_{split}_probe.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, indent=2), encoding="utf-8")
     print(json.dumps(out, indent=1))
     print(f"wrote {path}")
@@ -344,6 +345,7 @@ def main() -> int:
         tmpl.to_csv(sub, index=False)
         summ["submission"] = sub.relative_to(ROOT).as_posix()
         out = ROOT / "results" / f"{VERSION}_test_summary.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(summ, indent=2), encoding="utf-8")
     print(json.dumps(summ, indent=1))
     print(f"wrote {out}")

@@ -1,5 +1,5 @@
 # One-time setup for this workspace (safe to re-run; finished steps are skipped or re-verified).
-#   1. create .venv (Python 3.11) and install packages with uv
+#   1. create .venv (Python 3.11) and install the locked packages with uv (fails if uv.lock is out of date)
 #   2. download the two public QuantiPhy datasets + submission template into data\
 #   3. fetch the official starter kit (evaluator.py) at a pinned commit into external\QuantiPhy
 #
@@ -19,9 +19,9 @@ $uv = (Get-Command uv -ErrorAction SilentlyContinue).Source
 if (-not $uv) { $uv = "$env:USERPROFILE\.local\bin\uv.exe" }
 if (-not (Test-Path $uv)) { Fail "uv not found (expected on PATH or at $uv)" }
 
-Write-Host "[1/3] uv sync (Python 3.11 venv in .venv)"
-& $uv sync
-if ($LASTEXITCODE -ne 0) { Fail "uv sync" }
+Write-Host "[1/3] uv sync --locked (Python 3.11 venv in .venv, exactly as in uv.lock)"
+& $uv sync --locked
+if ($LASTEXITCODE -ne 0) { Fail "uv sync --locked" }
 
 Write-Host "[2/3] download datasets (pinned revisions) -> data\"
 $env:HF_HUB_DISABLE_PROGRESS_BARS = "1"
