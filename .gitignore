@@ -1,0 +1,39 @@
+# Secrets - never commit
+.env
+.env.*
+
+# Python environment
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Competition data, starter kit, weights, caches (never commit)
+data/
+external/
+weights/
+checkpoints/
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.gguf
+*.mp4
+*.parquet
+.cache/
+hf_cache/
+
+# Pipeline outputs: per-question caches, submission files and summaries
+# (they contain test-set predictions; keep them local)
+runs/
+submissions/
+results/
+
+# Editor / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

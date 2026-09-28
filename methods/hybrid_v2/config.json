@@ -1,0 +1,16 @@
+{
+  "version": "hybrid_v2",
+  "verifier": {
+    "frame_quantiles": [
+      0.2,
+      0.5,
+      0.8
+    ],
+    "crop_side": 448,
+    "crop_margin": 1.0
+  },
+  "rule": {
+    "p_yes_threshold": 0.5,
+    "keep_geometry_if_vlm_fallback": true
+  }
+}

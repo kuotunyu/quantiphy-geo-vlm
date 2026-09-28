@@ -1,0 +1,50 @@
+[project]
+name = "quantiphy-2026"
+version = "0.1.0"
+description = "QuantiPhy Challenge 2026 (NeurIPS 2026) Track B open-weight entry: data loader, MRA scorer, geometry + Qwen3-VL pipeline."
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "huggingface_hub>=0.34",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "pyarrow>=16",
+    "av>=12",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+# Geometry method (methods/geometry): open-vocabulary detector on GPU.
+vision = [
+    "torch>=2.7",
+    "torchvision>=0.22",
+    "transformers>=4.56,<5",
+    "pillow>=10",
+    "scipy>=1.13",
+    "bitsandbytes>=0.45",
+    "accelerate>=1.0",
+]
+
+[tool.uv]
+default-groups = ["dev", "vision"]
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128" }]
+torchvision = [{ index = "pytorch-cu128" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[build-system]
+requires = ["uv_build>=0.8,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "quantiphy"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]  # makes the methods/ package importable under `uv run pytest`
