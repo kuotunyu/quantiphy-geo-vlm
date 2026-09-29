@@ -1,0 +1,47 @@
+# Separate environment for methods/caw (MirroS-Lab/Code-as-World-VL-9B, Qwen3.5 architecture).
+# The main env (repo-root pyproject.toml, transformers<5) cannot load `qwen3_5` checkpoints, so this
+# env pins the authors' inference stack instead (external/Code-as-World requirements/inference.txt,
+# minus vLLM, which does not run on Windows). torch/torchvision are the versions vLLM 0.19.1 pins,
+# i.e. the ones the authors' preprocessing ran on. The main env is not touched.
+#
+#   uv sync --project envs/caw                                   # creates envs/caw/.venv (git-ignored)
+#   uv run --project envs/caw python -m methods.caw.run --split test --limit-videos 2   # from the repo root
+#   uv run --project envs/caw python -m pytest tests/test_caw.py -q                    # from the repo root
+#
+# The repo's src/quantiphy is an editable path dependency; `methods` is found because
+# `python -m` runs from the repo root (the current directory is on sys.path).
+[project]
+name = "quantiphy-caw-env"
+version = "0.1.0"
+description = "Environment for methods/caw: Code-as-World-VL-9B with Hugging Face transformers 5.11 (no vLLM)."
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "quantiphy-2026",
+    "torch==2.10.0",
+    "torchvision==0.25.0",
+    "transformers==5.11.0",
+    "qwen-vl-utils==0.0.14",
+    "decord==0.6.0",
+    "accelerate>=1.0",
+    "av>=12",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "pyarrow>=16",
+    "pillow>=10",
+    "jinja2>=3.1",
+    "huggingface_hub>=0.34",
+    "pytest>=8",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+quantiphy-2026 = { path = "../..", editable = true }
+torch = [{ index = "pytorch-cu128" }]
+torchvision = [{ index = "pytorch-cu128" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
