@@ -17,21 +17,31 @@ This is the code of our **Track B (Open-Weight)** uploads. Every model used here
 and runs locally; no closed-API model is called anywhere.
 
 Official test-set scores (answers withheld by the organizers), as shown on the competition site.
-All three files were uploaded with "Track B · Open weight" selected on 2026-09-29 (hybrid_v4 had
-already been uploaded on 2026-09-24, with the same score). `caw_geospeed_test.csv` was the last
-Track B upload and is our **final Track B entry**.
+After the rules clarification of 2026-10-15 the organizers rescored all uploads on the 3,010 test
+questions that remain after their exclusions (originally 3,289); the main columns below are these
+rescored values, and the last column is the score first shown on the original 3,289 questions.
+hybrid_v4, caw and caw_geospeed were uploaded with "Track B · Open weight" selected on 2026-09-29
+(hybrid_v4 had already been uploaded on 2026-09-24, with the same score). `caw_geospeed_iq_test.csv`
+was uploaded with Track B selected on 2026-10-25; it is our last Track B upload and our **final
+Track B entry**.
 
-| Version | Answers from | MRA | S2 | D2 | S3 | D3 |
-|---|---|---|---|---|---|---|
-| hybrid_v4 | our geometry measurement + Qwen3-VL-8B/32B, arbitrated | 0.552 | 0.532 | 0.593 | 0.576 | 0.508 |
-| caw | Code-as-World-VL-9B (a third-party open fine-tune) on every question; hybrid_v4 for 2 unusable replies | 0.544 | 0.479 | 0.584 | 0.553 | 0.562 |
-| **caw_geospeed** (final) | caw, with our geometry answers on 708 speed questions | **0.577** | 0.545 | 0.594 | 0.601 | 0.567 |
+| Version | Answers from | MRA (3,010) | S2 | D2 | S3 | D3 | MRA (3,289) |
+|---|---|---|---|---|---|---|---|
+| hybrid_v4 | our geometry measurement + Qwen3-VL-8B/32B, arbitrated | 0.551 | 0.522 | 0.594 | 0.579 | 0.511 | 0.552 |
+| caw | Code-as-World-VL-9B (a third-party open fine-tune) on every question; hybrid_v4 for 2 unusable replies | 0.542 | 0.473 | 0.582 | 0.550 | 0.565 | 0.544 |
+| caw_geospeed (earlier entry) | caw, with our geometry answers on 708 speed questions; not per question | 0.579 | 0.539 | 0.593 | 0.614 | 0.570 | 0.577 |
+| **caw_geospeed_iq** (final) | per-question version: Code-as-World-VL-9B, with per-question geometry answers on 718 speed questions | **0.578** | 0.537 | 0.591 | 0.616 | 0.566 | - |
 
-Most answers of the final entry (2,581 of 3,289) come from
+Most answers of the final entry (2,571 of 3,289) come from
 [Code-as-World-VL-9B](https://huggingface.co/MirroS-Lab/Code-as-World-VL-9B), a model fine-tuned
-and released by its authors (MirroS-Lab); the other 708 are this repository's geometry
-measurements. caw_geospeed was kept as the final entry after seeing the test scores of all three
-versions; see [Notes](#notes).
+and released by its authors (MirroS-Lab); the other 718 are this repository's geometry
+measurements, made per question. caw_geospeed_iq answers every question from that question's own
+inputs only, as the 2026-10-15 rules clarification asks; caw_geospeed did not (its geometry answers
+used other questions of the same video), so it is not our entry, although it scores 0.001 higher on
+the rescored questions. caw_geospeed_iq was fixed as the final entry before its test score was
+known; see [Per-question version](#per-question-version-caw_geospeed_iq-and-the-fallback-caw_iq).
+Before that, caw_geospeed had been kept as the entry after seeing the test scores of hybrid_v4, caw
+and caw_geospeed; see [Notes](#notes).
 
 **Code state.** The hybrid_v4 code is the version that produced the submitted file. For
 publication, comments and docstrings were edited and a few `mkdir` calls were added so that
@@ -50,6 +60,13 @@ hashes); apart from the wording of one low-memory warning, code behaviour is unc
 ours. Of those 15 files, 11 are identical to the ones that made our records; `methods/caw/run.py`,
 `methods/caw/recipe.py` and `methods/common/parse_sci.py` differ only in the edits above
 (comments, docstrings, one warning message), and `envs/caw/uv.lock` as described above.
+`methods/geometry_iq`, `tests/test_geometry_iq.py`, `scripts/check_geometry_iq_detect.py`,
+`scripts/geometry_iq_wait_run.sh` and `scripts/eval_caw_iq_val.py` are the code that produced
+`caw_geospeed_iq_test.csv` (added on 2026-10-25). For publication, the references to our internal
+plan (in docstrings, in the `--prereg` examples and as the plan path checked and recorded by
+`scripts/eval_caw_iq_val.py`) now name this README, and the runner script changes to the
+repository folder with a relative path; the code logic is unchanged. Because `methods/geometry_iq/run.py` is one of the hashed files, its `code_sha256`
+also differs from ours.
 
 ## Method
 
@@ -132,6 +149,50 @@ their near-greedy sampling (the two differ only on exact probability ties); and 
 15 frames (`internet_0038`) on which the authors' short-clip retry raises again and their run
 would stop, so a second retry uses 14 frames.
 
+### Per-question version: caw_geospeed_iq (and the fallback caw_iq)
+
+On 2026-10-15 the organizers asked every team to "answer each question independently, without
+using other questions or their associated answers or priors to infer its answer". The
+Code-as-World answers of caw_geospeed are per question, but its 708 geometry speed answers were
+not: geometry_v1 runs OWLv2 once per video with the object names of every question of that video
+(so a box can be suppressed by another question's name), picks free-fall candidates from all
+questions of the video, uses the median prior of the whole test set as a plausibility reference,
+and hybrid_v2 checks each (video, track) once, with the wording of the first question that used
+it. `methods/geometry_iq` rebuilds that path per question; `methods/geometry` and
+`methods/hybrid_v2` are imported unchanged:
+
+1. **Detection per question (GPU, OWLv2, same weights, frames and settings).** One detector call
+   per question, whose text queries are only the object names in that question and in its own
+   prior; the video is decoded per question as well. Cross-query box suppression therefore only
+   involves the question's own names, and free-fall candidates are only its own objects.
+2. **Fixed reference constants** for the plausibility check and the fallback: the median |prior|
+   per dimension over the *validation* priors (0.94 m, 1.25 m/s, 4.0 m/s²), for both splits.
+3. **Box check per question (GPU, Qwen3-VL-8B, same prompt, frames and 0.5 threshold).** Every
+   track a question used is checked with that question's own text.
+4. **caw_geospeed_iq (`methods/geometry_iq/combine.py`, CPU).** A question whose own text is a
+   speed question and whose geometry measured with every box accepted takes the geometry answer;
+   otherwise the Code-as-World answer; if that reply is unusable, the question's own
+   same-dimension prior value, else the fixed constant above (no hybrid_v4 fallback, since
+   hybrid_v4 contains the old geometry path). **caw_iq** is the same without geometry (the
+   fallback file, no GPU needed).
+
+On the test set caw_geospeed_iq has 2,571 Code-as-World and 718 geometry answers and differs from
+caw_geospeed on 108 questions: of the 708 old geometry answers, 694 are still geometry (70 with a
+different value) and 14 are now Code-as-World answers; 24 speed questions that were Code-as-World
+answers are now geometry answers. `tests/test_geometry_iq.py` checks on real validation and test
+questions that removing or altering the other questions of the same video (their text, prior,
+detections, Code-as-World answers, geometry sources) does not change a question's answer, and
+`scripts/check_geometry_iq_detect.py` re-ran detection on a GPU for 12 test questions right after
+a call with the other questions' names: boxes and scores were bit-identical in all 12. The plan
+(fixed before the validation run) uploads caw_geospeed_iq as the final Track B entry whatever its
+score. Validation (159 questions, scored once): caw_geospeed_iq 58.03 MRA vs caw_geospeed 58.42
+(video-level 95% CI of the difference [-1.18, +0.12]); caw_iq 55.18, equal to caw. Official test
+score (uploaded 2026-10-25, scored on the 3,010 rescored questions): MRA 0.578 (S2 0.537, D2 0.591,
+S3 0.616, D3 0.566), against 0.579 for caw_geospeed on the same questions. The fixed reference
+constants come from the public validation priors (prior text only, no answers) and are used only
+in the 1000x plausibility check and in the fallback; on the test set no caw_geospeed_iq answer is
+a fallback value.
+
 ## Models (all pinned to a Hugging Face revision in the code)
 
 | Model | Revision | Used in | License |
@@ -139,7 +200,7 @@ would stop, so a second retry uses 14 frames.
 | [google/owlv2-base-patch16-ensemble](https://huggingface.co/google/owlv2-base-patch16-ensemble) | `cfd3195ba4ea9592eec887ded089f4c08eff231d` | geometry detection, fp16 | Apache-2.0 |
 | [Qwen/Qwen3-VL-8B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct) | `0c351dd01ed87e9c1b53cbc748cba10e6187ff3b` | VLM answers (bf16, greedy) and box verification (bf16, one forward pass per frame) | Apache-2.0 |
 | [Qwen/Qwen3-VL-32B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-32B-Instruct) | `0cfaf48183f594c314753d30a4c4974bc75f3ccb` | hybrid_v4 VLM answers, 4-bit NF4, greedy | Apache-2.0 |
-| [MirroS-Lab/Code-as-World-VL-9B](https://huggingface.co/MirroS-Lab/Code-as-World-VL-9B) | `46b111c53f5680eb12c63a7391e5c690d1e14ab1` | caw / caw_geospeed answers (bf16, argmax) | Apache-2.0 |
+| [MirroS-Lab/Code-as-World-VL-9B](https://huggingface.co/MirroS-Lab/Code-as-World-VL-9B) | `46b111c53f5680eb12c63a7391e5c690d1e14ab1` | caw / caw_geospeed / caw_geospeed_iq answers (bf16, argmax) | Apache-2.0 |
 
 Licenses are as stated in each model card's metadata at the pinned revision. No weights are
 included here. The main environment is locked in `uv.lock` (Python 3.11, torch 2.11.0+cu128,
@@ -261,6 +322,28 @@ operating system's line ending, and the template (like the submitted files) has 
 endings, so the files match byte for byte only on Windows; on other systems compare the
 `parsed_value` column instead.
 
+### 3b. Per-question version (test split)
+
+Needs `runs/caw/test/items.csv` from section 3 (not the hybrid outputs). `--prereg` names a
+committed file recorded as the pre-registration (ours was an internal plan that is not included;
+`README.md` works). The script waits until no other python process uses the GPU, then runs one
+process per stage (OWLv2 detection, CPU solve, Qwen3-VL-8B box check, CPU decision) and the
+combine step:
+
+```bash
+SPLIT=test bash scripts/geometry_iq_wait_run.sh   # -> runs/geometry_iq/test/, submissions/caw_geospeed_iq_test.csv, submissions/caw_iq_test.csv
+# or stage by stage:
+uv run python -m methods.geometry_iq.run --split test --stage detect --prereg README.md   # also: solve, verify, decide
+uv run python -m methods.geometry_iq.combine --split test
+uv run python -m methods.geometry_iq.combine --split test --insurance-only               # caw_iq only, CPU
+```
+
+`results/caw_iq_combine_test_summary.json` should show caw_geospeed_iq sources `caw` 2571 and
+`geometry_iq:speed` 718. Our test run took 28.2 min for the last 587 of 894 detections (the run
+was resumed twice; finished questions are not rerun) and 16.5 min for the box check of 1,071
+tracks, model loading excluded. On validation, `scripts/eval_caw_iq_val.py` is the one-time
+scoring (it reads `results/caw_val.json` from `scripts/eval_caw_val.py`).
+
 ### 4. Validation (optional)
 
 The commands of sections 2 and 3 with `--split val` produce `results/predictions/val_*.csv`
@@ -315,6 +398,10 @@ competition is running.
 
 ## Notes
 
+- **caw_geospeed_iq replaced caw_geospeed as the final entry, for the rules, not for the score.**
+  The per-question plan was fixed before any validation or test scoring of caw_geospeed_iq and
+  made it the last Track B upload whatever its score. On the rescored test questions it scored
+  0.578 against caw_geospeed's 0.579. The notes below describe how caw_geospeed was chosen earlier.
 - **caw_geospeed was kept as the final entry after seeing test scores.** Before the validation
   run, a plan fixed the variants (caw, caw_geospeed and the report-only caw_authors) and the
   decision rules: a validation gate (caw at least 0.5007, just above hybrid_v4's 0.5006) for
